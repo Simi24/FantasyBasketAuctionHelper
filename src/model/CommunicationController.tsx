@@ -25,15 +25,27 @@ class CommunicationController {
     }
   }
 
-  async buyPlayer(playerName: string, cost: number): Promise<{ message: string; remaining_budget: number }> {
+  async finishAuction(): Promise<{ message: string }> {
     try {
-      const response = await this.api.post<{ message: string; remaining_budget: number }>('/buy', { player_name: playerName, cost: cost });
+      const response = await this.api.post<{ message: string }>('/finish');
+      return response.data;
+    } catch (error) {
+      console.error('Error finishing auction:', error);
+      throw error;
+    }
+  }
+
+  async buyPlayer(playerName: string, cost: number): Promise<{ message: string; remaining_budget: number, predicted_pdk: number, role: string }> {
+    try {
+      const response = await this.api.post<{ message: string; remaining_budget: number, predicted_pdk: number, role: string }>('/buy', { player_name: playerName, cost: cost });
       return response.data;
     } catch (error) {
       console.error('Error buying player:', error);
       throw error;
     }
   }
+
+  //TODO update the return type, equal to buyPlayer
 
   async opponentPick(playerName: string, opponentName: string): Promise<{ message: string }> {
     try {
@@ -61,6 +73,16 @@ class CommunicationController {
       return response.data;
     } catch (error) {
       console.error('Error getting team info:', error);
+      throw error;
+    }
+  }
+
+  async availablePlayers(): Promise<string[]> {
+    try {
+      const response = await this.api.get<string[]>('/available');
+      return response.data;
+    } catch (error) {
+      console.error('Error getting available players:', error);
       throw error;
     }
   }

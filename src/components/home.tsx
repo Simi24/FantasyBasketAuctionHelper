@@ -12,13 +12,8 @@ const Home: React.FC<NavProps> = ({ handleNavigation }) => {
     const [waiting, setWaiting] = useState<boolean>(false);
 
     useEffect(() => {
-        if (waiting) {
-            //document.body.style.cursor = 'wait';
-        }
-        else {
-            //document.body.style.cursor = 'default';
-        }
-    }, [waiting]);
+        window.localStorage.setItem('opponents', JSON.stringify(opponents));
+      }, [opponents]);
 
     const communicationController = new CommunicationController();
 
@@ -37,6 +32,7 @@ const Home: React.FC<NavProps> = ({ handleNavigation }) => {
     const handleInitAuction = async () => {
         try {
             setWaiting(true);
+
             let response = await communicationController.initialize(opponents);
             setWaiting(false);
             console.log('response in handleInitAuction:', response);
