@@ -38,6 +38,16 @@ const Auction: React.FC<NavProps> = ({ handleNavigation }) => {
         }
       }, [communicationController]);
 
+      const handleGenerateTeam = useCallback(async () => {
+        try {
+            let teams = await communicationController.generateSquads();
+            console.log(teams)
+        }
+        catch (error) {
+            console.error('Error finishing auction:', error);
+        }
+      }, [communicationController]);
+
     return (
         <div className="container mx-auto px-4 py-6">
             <div className="flex flex-col lg:flex-row gap-6">
@@ -52,6 +62,7 @@ const Auction: React.FC<NavProps> = ({ handleNavigation }) => {
 
                 <div className="lg:w-1/2 bg-red-500">
                     <p>Spazio per le squadre generate...</p>
+                    <Button onClick={() => handleGenerateTeam()}>Genera Team</Button>
                 </div>
             </div>
 

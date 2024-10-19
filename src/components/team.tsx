@@ -127,6 +127,16 @@ export default function Team({ teamName, isMainTeam, communicationController, on
     onTeamUpdate();
   }, [isMainTeam, onTeamUpdate, playerCost, playerName, remainingBudget]);
 
+  const handleSetPlayer = (player: String) => {
+    const parts = player.split(' ')
+
+    parts.pop()
+
+    const playerName = parts.join(' ')
+
+    setPlayerName(playerName)
+  }
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -170,12 +180,12 @@ export default function Team({ teamName, isMainTeam, communicationController, on
           <Input
             placeholder="Player Name"
             value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
+            onChange={(e) => {setPlayerName(e.target.value)}}
           />
           {filteredPlayers.length > 0 && (
             <ul className="border border-gray-200 rounded p-2">
               {filteredPlayers.map((player, index) => (
-                <li key={index} className="cursor-pointer hover:bg-gray-100 p-1" onClick={() => setPlayerName(player)}>
+                <li key={index} className="cursor-pointer hover:bg-gray-100 p-1" onClick={() =>{ handleSetPlayer(player)}}>
                   {player}
                 </li>
               ))}

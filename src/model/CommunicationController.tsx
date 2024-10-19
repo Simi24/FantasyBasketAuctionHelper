@@ -77,6 +77,8 @@ class CommunicationController {
     }
   }
 
+  //"total_cost": 165.58,
+  // The return total cost is the total cost computed using the predicted value of the model
   async availablePlayers(): Promise<string[]> {
     try {
       const response = await this.api.get<string[]>('/available');
