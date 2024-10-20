@@ -104,7 +104,7 @@ export default function Team({ teamName, isMainTeam, communicationController, on
     try {
       if (isMainTeam) {
         const response = await communicationController.buyPlayer(playerName, cost);
-        setRemainingBudget(response.remaining_budget);
+        setRemainingBudget(remainingBudget - cost);
         newPlayer.predicted_pdk = response.predicted_pdk;
         newPlayer.role = response.role;
       } else {
