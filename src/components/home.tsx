@@ -1,4 +1,4 @@
-import React, { useState, KeyboardEvent, ChangeEvent, useEffect } from 'react';
+import React, { useState, KeyboardEvent, ChangeEvent, useEffect, useCallback } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,10 +10,16 @@ const Home: React.FC<NavProps> = ({ handleNavigation }) => {
     const [opponent, setOpponent] = useState<string>("");
     const [opponents, setOpponents] = useState<string[]>([]);
     const [waiting, setWaiting] = useState<boolean>(false);
+    const [availablePlayers, setAvailablePlayers] = useState<string[]>([]);
 
     useEffect(() => {
         window.localStorage.setItem('opponents', JSON.stringify(opponents));
       }, [opponents]);
+    
+      useEffect(() => {
+        window.localStorage.setItem('availablePlayers', JSON.stringify(availablePlayers));
+        console.log('setting availablePlayers in local storage:', availablePlayers);
+        }, [availablePlayers]);
 
     const communicationController = new CommunicationController();
 
@@ -32,8 +38,11 @@ const Home: React.FC<NavProps> = ({ handleNavigation }) => {
     const handleInitAuction = async () => {
         try {
             setWaiting(true);
-
             let response = await communicationController.initialize(opponents);
+            const players = await communicationController.availablePlayers();
+            console.log('players in home component:', players);
+            window.localStorage.setItem('availablePlayers', JSON.stringify(availablePlayers));
+            setAvailablePlayers(players);
             setWaiting(false);
             console.log('response in handleInitAuction:', response);
             handleNavigation('auction');
@@ -56,6 +65,16 @@ const Home: React.FC<NavProps> = ({ handleNavigation }) => {
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         setOpponent(e.target.value);
     }
+
+    const getAvailablePlayers = useCallback(async () => {
+        try {
+          const players = await communicationController.availablePlayers();
+          console.log('players in home component:', players);
+          setAvailablePlayers(players);
+        } catch (error) {
+          console.error('Error fetching available players:', error);
+        }
+      }, [communicationController]);
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-blue-100 to-blue-200 flex flex-col">

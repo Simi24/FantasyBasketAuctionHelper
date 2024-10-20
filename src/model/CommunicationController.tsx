@@ -47,9 +47,13 @@ class CommunicationController {
 
   //TODO update the return type, equal to buyPlayer
 
-  async opponentPick(playerName: string, opponentName: string): Promise<{ message: string }> {
+  async opponentPick(playerName: string, opponentName: string, cost: number): Promise<{ message: string, opponent_remaining_budget: number }> {
     try {
-      const response = await this.api.post<{ message: string }>('/opponent', { player_name: playerName, opponent_name: opponentName });
+      const response = await this.api.post<{ message: string, opponent_remaining_budget: number }>('/opponent', {
+        player_name: playerName,
+        opponent_name: opponentName,
+        cost: cost
+      });
       return response.data;
     } catch (error) {
       console.error('Error registering opponent pick:', error);

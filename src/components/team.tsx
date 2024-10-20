@@ -6,6 +6,7 @@ import { Card, CardHeader, CardContent, CardFooter } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Alert, AlertDescription } from './ui/alert';
 import CommunicationController from '@/model/CommunicationController';
+import { on } from 'events';
 
 interface Player {
   first_name: string;
@@ -19,17 +20,24 @@ interface TeamProps {
   teamName: string;
   isMainTeam: boolean;
   communicationController: CommunicationController;
+  availablePlayersProps: string[];
   onTeamUpdate: () => void;
 }
 
-export default function Team({ teamName, isMainTeam, communicationController, onTeamUpdate }: TeamProps) {
+export default function Team({ teamName, isMainTeam, communicationController, availablePlayersProps, onTeamUpdate }: TeamProps) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [remainingBudget, setRemainingBudget] = useState<number>(150);
   const [playerName, setPlayerName] = useState<string>('');
   const [playerCost, setPlayerCost] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-  const [availablePlayers, setAvailablePlayers] = useState<string[]>([]);
+  const [availablePlayers, setAvailablePlayers] = useState<string[]>(availablePlayersProps);
   const [filteredPlayers, setFilteredPlayers] = useState<string[]>([]);
+
+  console.log(availablePlayers)
+
+  useEffect(() => {
+    setAvailablePlayers(availablePlayersProps);
+  }, [availablePlayersProps]);
 
   const fetchInitialTeamInfo = useCallback(async () => {
     try {
@@ -46,22 +54,7 @@ export default function Team({ teamName, isMainTeam, communicationController, on
     }
   }, [communicationController, isMainTeam, teamName]);
 
-  //TODO: move first getAvailablePlayers to parent component
-  useEffect(() => {
-    getAvailablePlayers();
-  }, []);
-
-  const getAvailablePlayers = useCallback(async () => {
-    try {
-      const players = await communicationController.availablePlayers();
-      console.log('players:', players);
-      setAvailablePlayers(players);
-    } catch (error) {
-      console.error('Error fetching available players:', error);
-      setError('Failed to fetch available players.');
-    }
-  }, [communicationController]);
-
+  
   useEffect(() => {
     if (playerName === '') {
       setFilteredPlayers([]);
@@ -108,9 +101,10 @@ export default function Team({ teamName, isMainTeam, communicationController, on
         newPlayer.predicted_pdk = response.predicted_pdk;
         newPlayer.role = response.role;
       } else {
-        await communicationController.opponentPick(playerName, teamName);
+        await communicationController.opponentPick(playerName, teamName, cost);
         newPlayer.predicted_pdk = 0;
       }
+      onTeamUpdate();
     } catch (error) {
       console.error('Error buying player:', error);
       setError('Failed to add player. Please try again.');
@@ -118,9 +112,6 @@ export default function Team({ teamName, isMainTeam, communicationController, on
     }
 
     setPlayers(prevPlayers => [...prevPlayers, newPlayer]);
-    if (isMainTeam) {
-      setRemainingBudget(prevBudget => prevBudget - cost);
-    }
     setPlayerName('');
     setPlayerCost('');
     setError(null);

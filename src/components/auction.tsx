@@ -3,11 +3,20 @@ import { NavProps } from "@/types/navigationProps";
 import { Button } from "./ui/button";
 import Team from "./team";
 import CommunicationController from '@/model/CommunicationController';
+import { Squad } from '@/types/squad';
+import GeneratedTeamsTable from './generatedTeamsTable';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 
 const communicationController = new CommunicationController();
 
-const Auction: React.FC<NavProps> = ({ handleNavigation }) => {
+interface AuctionProps {
+    handleNavigation: (route: string) => void;
+}
+
+export default function Auction({ handleNavigation}: AuctionProps) {
     const [opponents, setOpponents] = useState<string[]>([]);
+    const [availablePlayers, setAvailablePlayers] = useState<string[]>([]);
+    const [generatedTeams, setGeneratedTeams] = useState<Squad[]>();
 
     useEffect(() => {
         const initializeAuction = async () => {
@@ -15,7 +24,10 @@ const Auction: React.FC<NavProps> = ({ handleNavigation }) => {
                 const savedOpponents = window.localStorage.getItem('opponents');
                 const opponentList = savedOpponents ? JSON.parse(savedOpponents) : ['Opponent 1', 'Opponent 2', 'Opponent 3'];
                 setOpponents(opponentList);
-                await communicationController.initialize(opponentList);
+                const savedAvailablePlayers = window.localStorage.getItem('availablePlayers');
+                const availablePlayersList = savedAvailablePlayers ? JSON.parse(savedAvailablePlayers) : [];
+                console.log('availablePlayersList in auction component:', availablePlayersList);
+                setAvailablePlayers(availablePlayersList);
             } catch (error) {
                 console.error('Error initializing auction:', error);
             }
@@ -25,7 +37,11 @@ const Auction: React.FC<NavProps> = ({ handleNavigation }) => {
     }, []);
 
     const handleTeamUpdate = useCallback(() => {
-        // Trigger any necessary updates after a team change
+        getAvailablePlayers();
+    }, []);
+
+    useEffect(() => {
+        getAvailablePlayers();
     }, []);
 
     const handleFinishAuction = useCallback(async () => {
@@ -38,13 +54,25 @@ const Auction: React.FC<NavProps> = ({ handleNavigation }) => {
         }
       }, [communicationController]);
 
-      const handleGenerateTeam = useCallback(async () => {
+    const handleGenerateTeam = useCallback(async () => {
         try {
-            let teams = await communicationController.generateSquads();
-            console.log(teams)
+                const teams: Squad[] = await communicationController.generateSquads();
+                console.log('teams generated:', teams);
+                setGeneratedTeams(teams);
         }
         catch (error) {
-            console.error('Error finishing auction:', error);
+                console.error('Error finishing auction:', error);
+        }
+    }, [communicationController]);
+
+      const getAvailablePlayers = useCallback(async () => {
+        try {
+          const players = await communicationController.availablePlayers();
+          console.log('players:', players);
+          setAvailablePlayers(players);
+          window.localStorage.setItem('availablePlayers', JSON.stringify(players));
+        } catch (error) {
+          console.error('Error fetching available players:', error);
         }
       }, [communicationController]);
 
@@ -56,13 +84,21 @@ const Auction: React.FC<NavProps> = ({ handleNavigation }) => {
                         teamName="La tua Squadra" 
                         isMainTeam={true}
                         communicationController={communicationController}
+                        availablePlayersProps={availablePlayers}
                         onTeamUpdate={handleTeamUpdate}
                     />
                 </div>
 
                 <div className="lg:w-1/2 bg-red-500">
-                    <p>Spazio per le squadre generate...</p>
-                    <Button onClick={() => handleGenerateTeam()}>Genera Team</Button>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Generated Teams</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Button onClick={handleGenerateTeam} className="mb-4">Generate Teams</Button>
+                        <GeneratedTeamsTable teams={generatedTeams} />
+                    </CardContent>
+                </Card>
                 </div>
             </div>
 
@@ -73,6 +109,7 @@ const Auction: React.FC<NavProps> = ({ handleNavigation }) => {
                         teamName={opponent} 
                         isMainTeam={false}
                         communicationController={communicationController}
+                        availablePlayersProps={availablePlayers}
                         onTeamUpdate={handleTeamUpdate}
                     />
                 ))}
@@ -84,5 +121,3 @@ const Auction: React.FC<NavProps> = ({ handleNavigation }) => {
         </div>
     );
 }
-
-export default Auction;
