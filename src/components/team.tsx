@@ -6,7 +6,6 @@ import { Card, CardHeader, CardContent, CardFooter } from './ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { Alert, AlertDescription } from './ui/alert';
 import CommunicationController from '@/model/CommunicationController';
-import { on } from 'events';
 
 interface Player {
   first_name: string;
@@ -27,33 +26,27 @@ interface TeamProps {
 export default function Team({ teamName, isMainTeam, communicationController, availablePlayersProps, onTeamUpdate }: TeamProps) {
   const [players, setPlayers] = useState<Player[]>([]);
   const [remainingBudget, setRemainingBudget] = useState<number>(150);
+  const [totBudget, setTotBudget] = useState<number>(150);
   const [playerName, setPlayerName] = useState<string>('');
   const [playerCost, setPlayerCost] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [availablePlayers, setAvailablePlayers] = useState<string[]>(availablePlayersProps);
   const [filteredPlayers, setFilteredPlayers] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<string>(''); // Stato per gestire il tipo di ordinamento
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc'); // Stato per la direzione di ordinamento
 
-  console.log(availablePlayers)
+  useEffect(() => {
+    let totBudget = window.localStorage.getItem('totBudget');
+    if (totBudget) {
+      totBudget = JSON.parse(totBudget);
+      setTotBudget(Number(totBudget));
+      setRemainingBudget(Number(totBudget));
+    }
+  } ,[]);
 
   useEffect(() => {
     setAvailablePlayers(availablePlayersProps);
   }, [availablePlayersProps]);
-
-  const fetchInitialTeamInfo = useCallback(async () => {
-    try {
-      const teamInfo = await communicationController.getTeamInfo();
-      if (isMainTeam) {
-        setPlayers(teamInfo.my_team as Player[]);
-        setRemainingBudget(teamInfo.remaining_budget);
-      } else {
-        setPlayers((teamInfo.opponent_teams[teamName] || []) as Player[]);
-      }
-    } catch (error) {
-      console.error('Error fetching initial team info:', error);
-      setError('Failed to fetch initial team information.');
-    }
-  }, [communicationController, isMainTeam, teamName]);
-
   
   useEffect(() => {
     if (playerName === '') {
@@ -65,6 +58,52 @@ export default function Team({ teamName, isMainTeam, communicationController, av
       setFilteredPlayers(filtered);
     }
   }, [playerName, availablePlayers]);
+
+  // Funzione per ordinare i giocatori
+  const sortPlayers = (players: Player[], sortBy: string, sortDirection: 'asc' | 'desc') => {
+    const sortedPlayers = [...players];
+    
+    sortedPlayers.sort((a, b) => {
+      let compareA: string | number;
+      let compareB: string | number;
+  
+      if (sortBy === 'role') {
+        compareA = a.role;
+        compareB = b.role;
+      } else if (sortBy === 'cost') {
+        compareA = a.cost;
+        compareB = b.cost;
+      } else if (sortBy === 'pdk') {
+        compareA = a.predicted_pdk;
+        compareB = b.predicted_pdk;
+      } else {
+        return 0; // In caso di sortBy sconosciuto
+      }
+  
+      // Gestione ordinamento ascendente o discendente
+      if (typeof compareA === 'string' && typeof compareB === 'string') {
+        return sortDirection === 'asc' ? compareA.localeCompare(compareB) : compareB.localeCompare(compareA);
+      } else if (typeof compareA === 'number' && typeof compareB === 'number') {
+        return sortDirection === 'asc' ? compareA - compareB : compareB - compareA;
+      }
+  
+      return 0;
+    });
+  
+    return sortedPlayers;
+  };
+  
+
+  const sortedPlayers = sortPlayers(players, sortBy, sortDirection);
+
+  const handleSort = (criteria: string) => {
+    if (sortBy === criteria) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(criteria);
+      setSortDirection('asc');
+    }
+  };
 
   const addPlayer = useCallback(async () => {
     if (!playerName || !playerCost) {
@@ -101,8 +140,9 @@ export default function Team({ teamName, isMainTeam, communicationController, av
         newPlayer.predicted_pdk = response.predicted_pdk;
         newPlayer.role = response.role;
       } else {
-        await communicationController.opponentPick(playerName, teamName, cost);
-        newPlayer.predicted_pdk = 0;
+        const response = await communicationController.opponentPick(playerName, teamName, cost);
+        newPlayer.predicted_pdk = response.predicted_pdk;
+        newPlayer.role = response.role;
       }
       onTeamUpdate();
     } catch (error) {
@@ -118,20 +158,20 @@ export default function Team({ teamName, isMainTeam, communicationController, av
     onTeamUpdate();
   }, [isMainTeam, onTeamUpdate, playerCost, playerName, remainingBudget]);
 
-  const handleSetPlayer = (player: String) => {
-    const parts = player.split(' ')
+  const handleSetPlayer = (player: string) => {
+    const parts = player.split(' ');
 
-    parts.pop()
+    parts.pop();
 
-    const playerName = parts.join(' ')
+    const playerName = parts.join(' ');
 
-    setPlayerName(playerName)
-  }
+    setPlayerName(playerName);
+  };
 
   return (
-    <Card className="w-full">
+    <Card className="w-full bg-white/90 backdrop-blur-sm rounded-lg shadow-2xl border-2 border-orange-400">
       <CardHeader>
-        <h2 className="text-2xl font-bold text-blue-600">{teamName}</h2>
+        <h2 className="text-orange-500 text-2xl font-bold">{teamName}</h2>
       </CardHeader>
       <CardContent className="space-y-4">
         {isMainTeam && (
@@ -144,13 +184,19 @@ export default function Team({ teamName, isMainTeam, communicationController, av
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Cost</TableHead>
-              <TableHead>PDK</TableHead>
+              <TableHead className="cursor-pointer" onClick={() => handleSort('role')}>
+                Role {sortBy === 'role' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </TableHead>
+              <TableHead className="cursor-pointer" onClick={() => handleSort('cost')}>
+                Cost {sortBy === 'cost' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </TableHead>
+              <TableHead className="cursor-pointer" onClick={() => handleSort('pdk')}>
+                PDK {sortBy === 'pdk' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {players.map((player, index) => (
+            {sortedPlayers.map((player, index) => (
               <TableRow key={index}>
                 <TableCell>{`${player.first_name} ${player.last_name}`}</TableCell>
                 <TableCell>{player.role}</TableCell>
@@ -171,12 +217,12 @@ export default function Team({ teamName, isMainTeam, communicationController, av
           <Input
             placeholder="Player Name"
             value={playerName}
-            onChange={(e) => {setPlayerName(e.target.value)}}
+            onChange={(e) => setPlayerName(e.target.value)}
           />
           {filteredPlayers.length > 0 && (
             <ul className="border border-gray-200 rounded p-2">
               {filteredPlayers.map((player, index) => (
-                <li key={index} className="cursor-pointer hover:bg-gray-100 p-1" onClick={() =>{ handleSetPlayer(player)}}>
+                <li key={index} className="cursor-pointer hover:bg-gray-100 p-1" onClick={() => handleSetPlayer(player)}>
                   {player}
                 </li>
               ))}
@@ -201,7 +247,7 @@ export default function Team({ teamName, isMainTeam, communicationController, av
         <span className="text-sm text-gray-500">Players: {players.length}</span>
         {isMainTeam && (
           <span className="text-sm text-gray-500">
-            Budget used: {((150 - remainingBudget) / 150 * 100).toFixed(2)}%
+            Budget used: {((totBudget - remainingBudget) / totBudget * 100).toFixed(2)}%
           </span>
         )}
       </CardFooter>

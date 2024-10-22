@@ -14,10 +14,10 @@ class CommunicationController {
     });
   }
 
-  async initialize(opponentNames: string[]): Promise<{ message: string }> {
+  async initialize(opponentNames: string[], budget: Number): Promise<{ message: string }> {
     try {
       console.log('opponentNames in initialize:', opponentNames);
-      const response = await this.api.post<{ message: string }>('/initialize', { opponent_names: opponentNames });
+      const response = await this.api.post<{ message: string }>('/initialize', { opponent_names: opponentNames, budget: budget });
       return response.data;
     } catch (error) {
       console.error('Error initializing:', error);
@@ -45,11 +45,9 @@ class CommunicationController {
     }
   }
 
-  //TODO update the return type, equal to buyPlayer
-
-  async opponentPick(playerName: string, opponentName: string, cost: number): Promise<{ message: string, opponent_remaining_budget: number }> {
+  async opponentPick(playerName: string, opponentName: string, cost: number): Promise<{ message: string, opponent_remaining_budget: number, predicted_pdk: number, role: string }> {
     try {
-      const response = await this.api.post<{ message: string, opponent_remaining_budget: number }>('/opponent', {
+      const response = await this.api.post<{ message: string, opponent_remaining_budget: number, predicted_pdk: number, role: string }>('/opponent', {
         player_name: playerName,
         opponent_name: opponentName,
         cost: cost
@@ -61,10 +59,38 @@ class CommunicationController {
     }
   }
 
-  async generateSquads(numSquads: number = 3): Promise<Squad[]> {
+  async generateSquads(numSquads: number = 2): Promise<Squad[]> {
     try {
-      const response = await this.api.get<Squad[]>('/generate', { params: { num_squads: numSquads } });
-      return response.data;
+      const response = await this.api.get<Squad[]>('/generate', { 
+        params: { num_squads: numSquads },
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      let squads: Squad[];
+      if (typeof response.data === 'string') {
+        try {
+          squads = JSON.parse(response.data);
+        } catch (e) {
+          console.error('Error parsing response data:', e);
+          throw e;
+        }
+      } else {
+        squads = response.data;
+      }
+
+      if (!Array.isArray(squads)) {
+        throw new Error('Expected squads to be an array');
+      }
+      
+      squads.forEach((squad, index) => {
+        if (!squad.players || !Array.isArray(squad.players)) {
+          throw new Error(`Invalid squad structure at index ${index}`);
+        }
+      });
+      
+      return squads;
     } catch (error) {
       console.error('Error generating squads:', error);
       throw error;

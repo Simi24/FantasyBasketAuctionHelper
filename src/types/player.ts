@@ -1,7 +1,10 @@
 export interface Player {
-    first_name: string;
-    last_name: string;
-    cost: number;
-    predicted_pdk: number;
-    // Add other player properties as needed
-  }
+  cost: number;
+  first_name: string;
+  last_name: string;
+  normalized_pdk: number;
+  position: string;
+  predicted_pdk: number;
+  seasons_of_data: number | null;
+  team_name: string;
+}
