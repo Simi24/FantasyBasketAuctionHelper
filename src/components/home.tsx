@@ -83,12 +83,12 @@ const Home: React.FC<NavProps> = ({ handleNavigation }) => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-orange-500 to-orange-700 flex flex-col">
+        <div className="min-h-screen bg-gradient-to-b from-orange-500 to-orange-700 flex flex-col md:flex-row">
             <div className="fixed top-10 right-10 animate-bounce">
                 <BasketballSVG />
             </div>
 
-            <main className="flex-grow container mx-auto px-4 py-8">
+            <main className="flex-grow container mx-auto px-4 py-8 z-10">
                 <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-2xl p-8 max-w-2xl mx-auto border-2 border-orange-400">
                     <div className="flex items-center justify-center mb-8">
                         <Trophy className="text-orange-500 w-10 h-10 mr-3" />

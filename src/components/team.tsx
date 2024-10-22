@@ -176,7 +176,7 @@ export default function Team({ teamName, isMainTeam, communicationController, av
       <CardContent className="space-y-4">
         {isMainTeam && (
           <div className="text-sm font-medium">
-            Remaining Budget: €{remainingBudget.toFixed(2)}
+            Remaining Budget: {remainingBudget.toFixed(2)}
           </div>
         )}
 
@@ -200,7 +200,7 @@ export default function Team({ teamName, isMainTeam, communicationController, av
               <TableRow key={index}>
                 <TableCell>{`${player.first_name} ${player.last_name}`}</TableCell>
                 <TableCell>{player.role}</TableCell>
-                <TableCell>€{player.cost.toFixed(2)}</TableCell>
+                <TableCell>{player.cost.toFixed(2)}</TableCell>
                 <TableCell>{player.predicted_pdk}</TableCell>
               </TableRow>
             ))}
