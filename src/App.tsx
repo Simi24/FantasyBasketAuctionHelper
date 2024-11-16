@@ -1,7 +1,6 @@
 import './App.css'
-import React, { useState, KeyboardEvent, ChangeEvent, useEffect } from 'react';
+import { useState } from 'react';
 import Footer from './components/footer'
-import Header from './components/header'
 import Home from './components/home'
 import Auction from './components/auction';
 

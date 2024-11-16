@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { UserPlus } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
