@@ -37,7 +37,7 @@ FantasyBasketAuctionHelper is a web application designed to assist users during 
 
 1. Clone the repository with submodules:
 ```bash
-git clone --recurse-submodules https://github.com/[your-username]/FantasyBasketAuctionHelper.git
+git clone --recurse-submodules https://github.com/Simi24/FantasyBasketAuctionHelper.git
 ```
 
 2. If you've already cloned the repository without submodules, initialize the backend submodule:
