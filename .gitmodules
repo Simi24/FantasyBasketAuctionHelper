@@ -1,0 +1,3 @@
+[submodule "FantasyBasket_ML"]
+	path = FantasyBasket_ML
+	url = https://github.com/Simi24/FantasyBasket_ML.git
