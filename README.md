@@ -12,6 +12,10 @@ FantasyBasketAuctionHelper is a web application designed to assist users during 
   - Available players
   - Expected prices
 
+
+https://github.com/user-attachments/assets/05dd6fdc-98f2-4d9e-914f-e24fa46c6037
+
+
 ## 🛠️ Technology Stack
 
 ### Frontend
