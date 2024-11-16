@@ -1,8 +1,8 @@
 version: '3.4'
 
 services:
-  sampleproject:
-    image: sampleproject
+  auctionhelper:
+    image: auctionhelper
     build:
       context: .
       dockerfile: ./Dockerfile
